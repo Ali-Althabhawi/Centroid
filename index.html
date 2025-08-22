@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Centroid Demo</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    canvas { border: 1px solid #333; margin-top: 20px; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Centroid Visualization</h1>
+  <canvas id="graph" width="400" height="400"></canvas>
+  <br>
+  <button onclick="drawGraph()">Randomize Points</button>
+  <script>
+    const canvas = document.getElementById('graph');
+    const ctx = canvas.getContext('2d');
+    const size = 400;
+    const margin = 40;
+    const axisMax = 10;
+
+    function randomPoints(n) {
+      return Array.from({length: n}, () => ({
+        x: Math.random() * axisMax,
+        y: Math.random() * axisMax
+      }));
+    }
+
+    function getCentroid(points) {
+      const sum = points.reduce((acc, p) => ({
+        x: acc.x + p.x,
+        y: acc.y + p.y
+      }), {x: 0, y: 0});
+      return {
+        x: sum.x / points.length,
+        y: sum.y / points.length
+      };
+    }
+
+    function toCanvasCoords({x, y}) {
+      // Map (0,10) to canvas with margin
+      return {
+        cx: margin + x * ((size - 2 * margin) / axisMax),
+        cy: size - margin - y * ((size - 2 * margin) / axisMax)
+      };
+    }
+
+    function drawGraph() {
+      ctx.clearRect(0, 0, size, size);
+
+      // Draw axes
+      ctx.strokeStyle = "#888";
+      ctx.beginPath();
+      ctx.moveTo(margin, margin);
+      ctx.lineTo(margin, size - margin);
+      ctx.lineTo(size - margin, size - margin);
+      ctx.stroke();
+
+      // Draw axis labels
+      ctx.fillStyle = "#000";
+      ctx.font = "14px sans-serif";
+      ctx.fillText("0", margin - 15, size - margin + 15);
+      ctx.fillText("10", size - margin - 10, size - margin + 15);
+      ctx.fillText("10", margin - 25, margin + 5);
+
+      // Generate points and centroid
+      const points = randomPoints(5);
+      const centroid = getCentroid(points);
+
+      // Draw points
+      points.forEach((p, i) => {
+        const {cx, cy} = toCanvasCoords(p);
+        ctx.fillStyle = "#0074D9";
+        ctx.beginPath();
+        ctx.arc(cx, cy, 7, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.fillText(`P${i+1}`, cx - 10, cy - 10);
+      });
+
+      // Draw centroid
+      const {cx: cX, cy: cY} = toCanvasCoords(centroid);
+      ctx.fillStyle = "#FF4136";
+      ctx.beginPath();
+      ctx.arc(cX, cY, 9, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = "#000";
+      ctx.fillText("Centroid", cX - 25, cY - 15);
+
+      // Draw lines from points to centroid
+      ctx.strokeStyle = "#2ECC40";
+      points.forEach(p => {
+        const {cx, cy} = toCanvasCoords(p);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cX, cY);
+        ctx.stroke();
+      });
+    }
+
+    drawGraph();
+  </script>
+</body>
+</html>
